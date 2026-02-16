@@ -124,9 +124,9 @@
       <div class="py-5 bg-light overflow-auto listku">
         <div class="container">
           <h5 class="text-center">PREVIEW STRUK</h5>
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5">
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5" id="preview">
             <!-- looping mulai -->
-            <div class="col-12">
+            <!-- <div class="col-12">
               <div class="card shadow-sm">
                 <div class="card-header text-center">
                   <b>Mock Struk</b>
@@ -143,30 +143,12 @@
                       <button type="button" class="btn btn-sm btn-outline-secondary">Hapus</button>
                       <button type="button" class="btn btn-sm btn-outline-secondary">Print</button>
                     </div>
-                    <!-- <small class="text-muted">9 mins</small> -->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- looping selesai -->
-             <!-- looping mulai -->
-            <!-- <div class="col-12">
-              <div class="card shadow-sm">
-                <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>
-                <div class="card-body">
-                  <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
-                    </div>
-                    <small class="text-muted">9 mins</small>
                   </div>
                 </div>
               </div>
             </div> -->
             <!-- looping selesai -->
-            
+                        
           </div>
         </div>
 
@@ -214,6 +196,16 @@
             console.log('btn-cetak:', nama, satker, id, isOto, durasi);
           });
 
+          $('#toggle-fd').change(function (e) { 
+            if(this.checked){
+              console.log('checked');
+              $('#no-fd').attr('disabled', '');
+            } else {
+              console.log('no checked');
+              $('#no-fd').removeAttr('disabled');
+            }
+          });
+
       });
 
       let urlRead = 'https://towingkalimantan.com/api/siasat/read';
@@ -237,6 +229,21 @@
           success: function (response) {
             let read = JSON.parse(response);
             console.log("read:", read);
+
+            for(var i in read) {
+              let item = read[i];
+              // console.log(item, read[item]);
+              let loopMock = '<div class="col-12 mb-2"><div class="card shadow-sm"><div class="card-header text-center">';
+              loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text">';
+              loopMock +=  'No. FD  : '+item.id+'<br>';
+              loopMock +=  'Nama    : '+item.nama+'<br>';
+              loopMock +=  'Tujuan  : '+item.satker+'<br>';
+              loopMock +=  'Durasi  : '+item.durasi+'<br>';
+              loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group"><button type="button" class="btn btn-sm btn-outline-secondary">Hapus</button>';
+              loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary">Print</button></div></div></div></div></div>';
+              $('#preview').append(loopMock);
+
+            }
           }
         });
       }
