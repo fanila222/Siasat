@@ -30,7 +30,7 @@
       }
 
       .listku {
-        height: 100vh;
+        height: 70vh;
       }
     </style>
 
@@ -53,11 +53,12 @@
 
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3" id="DivIdToPrint">
     <div class="col-md-8 col-sm-12">
-      <section class="py-5 container">
+      <section class="py-3 container">
         <!-- form input -->
         <div class="mb-3">
           <label for="nama" class="form-label">INPUT FORM</label>
-          <input type="text" class="form-control" id="nama" placeholder="Nama Pengunjung">
+          <input type="text" class="form-control mb-2" id="nama" placeholder="Nama Pengunjung">
+          <input type="text" class="form-control" id="judul" placeholder="Judul">
         </div>
         <!-- satker -->
         <div class="mb-3">
@@ -121,10 +122,11 @@
 
     <!-- list mulai -->
     <div class="col-md-4 col-sm-12">
-      <div class="py-5 bg-light overflow-auto listku">
+      <div class="py-3 bg-light">
         <div class="container">
-          <h5 class="text-center">PREVIEW STRUK</h5>
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5" id="preview">
+          <h5 class="text-center">RIWAYAT STRUK</h5>
+          <div class="text-center"><button type="button" class="btn btn-danger mb-3" id="hapus-riwayat">Hapus Semua Riwayat</button></div> 
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 overflow-auto listku border pt-2" id="preview">
             <!-- looping mulai -->
             <!-- <div class="col-12">
               <div class="card shadow-sm">
@@ -179,9 +181,11 @@
 
           read();
           
+          // tambah antrian
           $('#btn-cetak').click(function (e) { 
             let id = $('#no-fd').val();
             let nama = $('#nama').val();
+            let judul = $('#judul').val();
             let satker = $('input[name="satker"]:checked').val();
             let isOto = $('input[id="toggle-fd"]:checked').val();
             let durasi = $('#durasi').val();
@@ -189,13 +193,14 @@
             if(nama == ''){
               alert('Nama belum diisi')
             } else {
-              let kirim = {id:id, nama:nama, satker:satker, isOto:isOto, durasi:durasi};
+              let kirim = {id:id, nama:nama, judul:judul, satker:satker, isOto:isOto, durasi:durasi};
               tambah(kirim);
             }
 
             console.log('btn-cetak:', nama, satker, id, isOto, durasi);
           });
 
+          // fd toggle
           $('#toggle-fd').change(function (e) { 
             if(this.checked){
               console.log('checked');
@@ -206,6 +211,9 @@
             }
           });
 
+          $('#hapus-riwayat').click(function (e) { 
+            write(JSON.parse('[]'));
+          });
       });
 
       let urlRead = 'https://towingkalimantan.com/api/siasat/read';
@@ -230,13 +238,21 @@
             let read = JSON.parse(response);
             console.log("read:", read);
 
-            for(var i in read) {
+            // otomatis no fd
+            const maxId = read.reduce((max, currentItem) => {
+              return Math.max(max, currentItem.id);
+            }, 0);
+            $('#no-fd').val(maxId+1);
+
+            // show list preview
+            for(let i = read.length-1; i > -1; i--) {
               let item = read[i];
               // console.log(item, read[item]);
               let loopMock = '<div class="col-12 mb-2 item-loop"><div class="card shadow-sm"><div class="card-header text-center">';
               loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text">';
               loopMock += 'No. FD  : '+item.id+'<br>';
               loopMock += 'Nama    : '+item.nama+'<br>';
+              loopMock += 'Judul    : '+item.judul+'<br>';
               loopMock += 'Tujuan  : '+item.satker+'<br>';
               loopMock += 'Durasi  : '+item.durasi+' hari<br>';
               loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group">';
@@ -250,23 +266,26 @@
       }
 
       function write(data) {
+        console.log('write', data);
         $.ajax({
           type: 'post',
           data: {data:JSON.stringify(data)},
           url: 'https://towingkalimantan.com/api/siasat/write',
           success: function (response) {
             console.log(response);
+            window.location.reload();
           }
         });
       }
 
+      // print antrian
       function printDiv(data){
         var divToPrint= data.closest('.card-body').querySelector('.card-text');
-        // divToPrint.querySelector('.d-flex').remove();
         var newWin=window.open('','Print-Window');
         newWin.document.open();
         newWin.document.write('<html><body onload="window.print()">'  
-          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 0px 100px"> <b>Mock Struk</b> <hr>'
+          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 10px 100px"> <b>Mock Struk Admin</b> <hr>'+ divToPrint.innerHTML + "</div>"
+          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 0px 100px"> <b>Mock Struk Klien</b> <hr>'
           + divToPrint.innerHTML+'</div></body></html>');
         newWin.document.close();
         setTimeout(function(){newWin.close();},10);
