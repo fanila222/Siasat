@@ -34,7 +34,7 @@
       }
 
       .listku {
-        height: 70vh;
+        height: 80vh;
       }
     </style>
 
@@ -131,48 +131,62 @@
         <div class="mb-3 text-center">
           <button type="button" class="btn btn-primary" id="btn-cetak">Cetak Antrian</button>
         </div>
-
+        
       </section>
     </div>
 
+    
     <!-- list mulai -->
     <div class="col-md-4 col-sm-12">
       <div class="py-3 bg-light">
         <div class="container">
-          <h5 class="text-center">RIWAYAT STRUK</h5>
-          <div class="text-center"><button type="button" class="btn btn-danger mb-3" id="hapus-riwayat">Hapus Semua Riwayat</button></div> 
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 overflow-auto listku border pt-2" id="preview">
-            <!-- looping mulai -->
-            <!-- <div class="col-12">
-              <div class="card shadow-sm">
-                <div class="card-header text-center">
-                  <b>Mock Struk</b>
-                </div>
-                <div class="card-body">
-                  <p class="card-text">
-                      No. FD  :                   <br>
-                      Nama    :                   <br>
-                      Tujuan  :                   <br>
-                      Durasi  :                   <br>
-                  </p>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-outline-secondary">Hapus</button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary">Print</button>
-                    </div>
-                  </div>
-                </div>
+
+          <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+              <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Antrian</button>
+              <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Riwayat</button>
+            </div>
+          </nav>
+          <div class="tab-content" id="nav-tabContent">
+            <!-- antrian -->
+            <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+              <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 overflow-auto listku border pt-2" id="antrian">
               </div>
-            </div> -->
-            <!-- looping selesai -->
-                        
+            </div>
+            <!-- riwayat -->
+            <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+              <!-- <h5 class="text-center mt-2">RIWAYAT STRUK</h5> -->
+              <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 overflow-auto listku border pt-2" id="riwayat">
+              </div>
+              <div class="text-center"><button type="button" class="btn btn-danger mb-3" id="hapus-riwayat">Hapus Semua Riwayat</button></div> 
+            </div>
           </div>
         </div>
-
       </div>
     </div>
     <!-- list selesai -->
 
+    <!-- Modal -->
+    <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEditLabel">Edit Antrian</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="tglambil" class="form-label">Tanggal Ambil</label>
+            <input type="date" class="form-control mb-2" id="tglambil" placeholder="">
+            <label for="pengambil" class="form-label">Nama Pengambil</label>
+            <input type="text" class="form-control" id="pengambil" placeholder="Nama Pengambil">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            <button type="button" class="btn btn-primary" id="simpanAntrian">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -188,8 +202,7 @@
 </footer> -->
 
 
-    <!-- <script src="../assets/dist/js/bootstrap.bundle.min.js"></script> -->
-    <!-- <script type="text/javascript" src="database.json"></script> -->
+    <script src="assets/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       $(document).ready(function() {
           console.log('Siap bung!');
@@ -206,10 +219,16 @@
             let durasi = $('#durasi').val();
             let jumlah = $('#jumlah').val();
 
+            let tglnow = new Date();
+            let tglcetak = tglnow.toLocaleDateString('id-ID');console.log(tglcetak);
+            let tglambil = '';
+            let pengambil = '';
+            let isSelesai = false; 
+
             if(nama == ''){
               alert('Nama belum diisi')
             } else {
-              let kirim = {id:id, nama:nama, judul:judul, satker:satker, isOto:isOto, durasi:durasi, jumlah:jumlah};
+              let kirim = {id:id, nama:nama, judul:judul, satker:satker, isOto:isOto, durasi:durasi, jumlah:jumlah, tglcetak:tglcetak, tglambil:tglambil, pengambil:pengambil, isSelesai:isSelesai};
               tambah(kirim);
             }
 
@@ -227,14 +246,32 @@
             }
           });
 
+          // hapus riwayat
           $('#hapus-riwayat').click(function (e) { 
             write(JSON.parse('[]'));
           });
 
+          // simpan antrian
+          $('#simpanAntrian').click(function (e) {
+            const today = new Date($('#tglambil').val());
+            TGLAMBIL = today.toLocaleDateString('en-GB'); 
+            PENGAMBIL = $('#pengambil').val();
+            $('#modalEdit').modal('hide');
+            edit();
+          });
           
       });
 
       let urlRead = 'https://towingkalimantan.com/api/siasat/read';
+      let TGLAMBIL = '';
+      let PENGAMBIL = '';
+      let ID_EDIT = '';
+
+      function clearData() {
+        TGLAMBIL = '';
+        PENGAMBIL = '';
+        ID_EDIT = '';
+      }
 
       function tambah(data) {
         $.ajax({
@@ -248,6 +285,33 @@
         });
       }
 
+      function edit() {
+        $.ajax({
+          type: 'get',
+          url: urlRead,
+          success: function (response) {
+            let read = JSON.parse(response);
+
+            for (let i = 0; i < read.length; i++) {
+              if (read[i].id == ID_EDIT) {
+                console.log('EDITZ', read[i], 'ID_EDIT', ID_EDIT);
+                read[i].pengambil = PENGAMBIL;
+                read[i].tglambil = TGLAMBIL;
+                read[i].isSelesai = true;
+              }
+            }
+            console.log('read FINAL', read);
+
+            let isConfirmed = confirm('Antrian dengan FD:'+ID_EDIT+' sudah selesai. ');
+            if (isConfirmed) {
+              write(read);
+            } 
+
+            clearData();
+          }
+        });
+      }
+
       function read() {
         $.ajax({
           type: 'get',
@@ -256,10 +320,6 @@
             let read = JSON.parse(response);
             console.log("read:", read);
             
-            if(read.length == 0){
-              $('#preview').append('<div class="w-100 text-center">Riwayat Kosong</div>');
-            }            
-
             // otomatis no fd
             const maxId = read.reduce((max, currentItem) => {
               return Math.max(max, currentItem.id);
@@ -276,34 +336,66 @@
 
             $('#no-fd').val(maxId+1+maxJml);
 
-            // show list preview
+            // show list antrian & riwayat
+            let countAntrian = 0;
+            let countRiwayat = 0;
             for(let i = read.length-1; i > -1; i--) {
               let item = read[i];
               // console.log(item, read[item]);
-
-              let jml = Number(item.jumlah);
-              let sampai = '';
-              if(jml > 1){
-                sampai = ' Sampai ' + (Number(item.id) + jml - 1);
+              // antrian
+              if (item.isSelesai == false) {
+                countAntrian += 1;
+                let loopMock = antrianIn(item, false);
+                loopMock += 'Tgl Ambil  : <a class="text-decoration-none text-dark data-tglambil">'+item.tglambil+'</a> <br>';
+                loopMock += 'Pengambil  : <a class="text-decoration-none text-dark data-pengambil">'+item.pengambil+'</a> <br>';
+                loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group">';
+                loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="editAntrian('+item.id+');">Diambil</button>';
+                loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="printDiv(this, false);">Print</button></div></div></div></div></div>';
+                $('#antrian').append(loopMock);
+              // selesai
+              } else {
+                countRiwayat += 1;
+                let loopMock = antrianIn(item, true);
+                loopMock += 'Tgl Ambil  : <a class="text-decoration-none text-dark data-tglambil">'+item.tglambil+'</a> <br>';
+                loopMock += 'Pengambil  : <a class="text-decoration-none text-dark data-pengambil">'+item.pengambil+'</a> <br>';
+                loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group">';
+                loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="printDiv(this, true);">Print</button></div></div></div></div></div>';
+                $('#riwayat').append(loopMock);
               }
-              console.log('jml', jml, 'sampai', sampai);
-
-              let loopMock = '<div class="col-12 mb-2 item-loop"><div class="card shadow-sm"><div class="card-header text-center">';
-              loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text" jumlah-fd="'+item.jumlah+'">';
-              loopMock += 'No. FD  : <a class="text-decoration-none text-dark data-no-fd">'+item.id+'</a> '+sampai+'<br>';
-              loopMock += 'Nama    : <a class="text-decoration-none text-dark data-nama">'+item.nama+'</a> <br>';
-              loopMock += 'Judul    : <a class="text-decoration-none text-dark data-judul">'+item.judul+'</a> <br>';
-              loopMock += 'Tujuan  : <a class="text-decoration-none text-dark data-satker">'+item.satker+'</a> <br>';
-              loopMock += 'Durasi  : <a class="text-decoration-none text-dark data-durasi">'+item.durasi+'</a> hari<br>';
-              loopMock += 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+item.jumlah+'</a> <br>';
-              loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group">';
-              // loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary">Hapus</button>';
-              loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="printDiv(this);">Print</button></div></div></div></div></div>';
-              $('#preview').append(loopMock);
-
             }
+
+            console.log('countAntrian', countAntrian, 'countRiwayat', countRiwayat);
+            if(countAntrian == 0){
+              $('#antrian').append('<div class="w-100 text-center">Antrian Kosong</div>');
+            }   
+
+            if(countRiwayat == 0){
+              $('#riwayat').append('<div class="w-100 text-center">Riwayat Kosong</div>');
+            }  
           }
         });
+      }
+      
+      function antrianIn(item, isSelesai) {
+        let jml = Number(item.jumlah);
+        let sampai = '';
+        if(jml > 1){
+          sampai = ' Sampai ' + (Number(item.id) + jml - 1);
+        }
+        console.log('jml', jml, 'sampai', sampai);
+
+        let isA = isSelesai == false ? 'No. FD' : 'No. SPM';
+        
+        let loopMock = '<div class="col-12 mb-2 item-loop"><div class="card shadow-sm"><div class="card-header text-center">';
+        loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text" jumlah-fd="'+item.jumlah+'">';
+        loopMock += isA +' : <a class="text-decoration-none text-dark data-no-fd">'+item.id+'</a> '+sampai+'<br>';
+        loopMock += 'Nama    : <a class="text-decoration-none text-dark data-nama">'+item.nama+'</a> <br>';
+        loopMock += 'Judul    : <a class="text-decoration-none text-dark data-judul">'+item.judul+'</a> <br>';
+        loopMock += 'Tujuan  : <a class="text-decoration-none text-dark data-satker">'+item.satker+'</a> <br>';
+        loopMock += 'Durasi  : <a class="text-decoration-none text-dark data-durasi">'+item.durasi+'</a> hari<br>';
+        loopMock += 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+item.jumlah+'</a> <br>';
+        loopMock += 'Tgl Cetak  : <a class="text-decoration-none text-dark data-tglcetak">'+item.tglcetak+'</a> <br>';
+        return loopMock;
       }
 
       function write(data) {
@@ -319,8 +411,14 @@
         });
       }
 
+      function editAntrian(id) {
+        ID_EDIT = id;
+        $('#modalEdit').modal('show');
+        console.log('ID_EDIT', ID_EDIT);
+      }
+
       // print antrian
-      function printDiv(data){
+      function printDiv(data, isSelesai){
         let divToPrint= data.closest('.card-body').querySelector('.card-text');
         let jumlahSize = divToPrint.getAttribute('jumlah-fd');
         let id = $(divToPrint).find('.data-no-fd').text().trim();
@@ -329,17 +427,29 @@
         let satker = $(divToPrint).find('.data-satker').text().trim();
         let durasi = $(divToPrint).find('.data-durasi').text().trim();
         let jumlah = $(divToPrint).find('.data-jumlah').text().trim();
+        let tglcetak = $(divToPrint).find('.data-tglcetak').text().trim();
         console.log('id', id, 'nama', nama, 'judul', judul, 'satker', satker, 'durasi', durasi, 'jumlah', jumlah, 'jumlahSize', jumlahSize);
 
         let content = '';
         let count = 0;
+        let isA = isSelesai == false ? 'No. FD' : 'No. SPM';
+        let conSelesai = '';
+        if(isSelesai == true){
+          let tglambil = $(divToPrint).find('.data-tglambil').text().trim();
+          let pengambil = $(divToPrint).find('.data-pengambil').text().trim();
+          conSelesai += 'Tgl Ambil  : <a class="text-decoration-none text-dark data-tglambil">'+tglambil+'</a> <br>';
+          conSelesai += 'Pengambil  : <a class="text-decoration-none text-dark data-pengambil">'+pengambil+'</a> <br>';
+        }
+
         for (let i = 0; i < jumlahSize; i++) {
-          let conData = 'No. FD  : <a class="text-decoration-none text-dark data-no-fd">'+( Number(id) + count) +'</a> <br>'
+          let conData = isA + '  : <a class="text-decoration-none text-dark data-no-fd">'+( Number(id) + count) +'</a> <br>'
           + 'Nama    : <a class="text-decoration-none text-dark data-nama">'+nama+'</a> <br>'
           + 'Judul    : <a class="text-decoration-none text-dark data-judul">'+judul+'</a> <br>'
           + 'Tujuan  : <a class="text-decoration-none text-dark data-satker">'+satker+'</a> <br>'
           + 'Durasi  : <a class="text-decoration-none text-dark data-durasi">'+durasi+'</a> hari<br>'
-          + 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+jumlah+'</a> <br>';
+          + 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+jumlah+'</a> <br>'
+          + 'Tgl Cetak  : <a class="text-decoration-none text-dark data-tglcetak">'+tglcetak+'</a> <br>'
+          + conSelesai;
 
             content += '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 10 10px 0; width:49%; display:inline-block; box-sizing: border-box;"> <b>Mock Struk Admin</b> <hr>'+ conData + '</div>'
           + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 0 10px 0; width:49%; display:inline-block; box-sizing: border-box;"> <b>Mock Struk Klien</b> <hr>'+ conData +'</div>';
