@@ -1,4 +1,4 @@
-<html lang="en" class="overflow-hidden">
+<html lang="en" class="overflow-x-hidden">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,6 +11,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <style>
+      body {
+        overflow-x: hidden;
+      }
+
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -42,8 +46,8 @@
   <div class="navbar navbar-dark bg-dark shadow-sm">
     <div class="container">
       <a href="#" class="navbar-brand d-flex align-items-center">
-        <img class="logo mx-3" src="assets/img/logo-kemhan.png">
-        <strong>SIASAT | SIstem Antrian SATker</strong>
+        <img class="logo mx-2" src="assets/img/logo-kemhan.png">
+        <strong>SIASAT | Sistem Antrian Satker</strong>
       </a>
     </div>
   </div>
@@ -101,6 +105,17 @@
             </div>
           </div>
         </div>
+         <!-- jumlah fd -->
+        <div class="mb-3">
+          <div class="row">
+            <div class="col-6">
+              <label for="formGroupExampleInput" class="form-label">JUMLAH NOMOR FD</label>
+            </div>
+            <div class="col-6">
+              <input type="number" class="form-control" id="jumlah" value="1" min="1">
+            </div>
+          </div>
+        </div>
         <!-- durasi -->
         <div class="mb-3">
           <div class="row">
@@ -112,7 +127,7 @@
             </div>
           </div>
         </div>
-        <!-- durasi -->
+        <!-- cetak antrian -->
         <div class="mb-3 text-center">
           <button type="button" class="btn btn-primary" id="btn-cetak">Cetak Antrian</button>
         </div>
@@ -189,11 +204,12 @@
             let satker = $('input[name="satker"]:checked').val();
             let isOto = $('input[id="toggle-fd"]:checked').val();
             let durasi = $('#durasi').val();
+            let jumlah = $('#jumlah').val();
 
             if(nama == ''){
               alert('Nama belum diisi')
             } else {
-              let kirim = {id:id, nama:nama, judul:judul, satker:satker, isOto:isOto, durasi:durasi};
+              let kirim = {id:id, nama:nama, judul:judul, satker:satker, isOto:isOto, durasi:durasi, jumlah:jumlah};
               tambah(kirim);
             }
 
@@ -214,6 +230,8 @@
           $('#hapus-riwayat').click(function (e) { 
             write(JSON.parse('[]'));
           });
+
+          
       });
 
       let urlRead = 'https://towingkalimantan.com/api/siasat/read';
@@ -237,24 +255,47 @@
           success: function (response) {
             let read = JSON.parse(response);
             console.log("read:", read);
+            
+            if(read.length == 0){
+              $('#preview').append('<div class="w-100 text-center">Riwayat Kosong</div>');
+            }            
 
             // otomatis no fd
             const maxId = read.reduce((max, currentItem) => {
               return Math.max(max, currentItem.id);
             }, 0);
-            $('#no-fd').val(maxId+1);
+            console.log('maxId', maxId);
+
+            let maxJml = 0;
+            for (const item in read) {
+                if(maxId == read[item].id){
+                  maxJml = read[item].jumlah - 1;
+                  console.log('maxJml', maxJml);
+                }
+            }
+
+            $('#no-fd').val(maxId+1+maxJml);
 
             // show list preview
             for(let i = read.length-1; i > -1; i--) {
               let item = read[i];
               // console.log(item, read[item]);
+
+              let jml = Number(item.jumlah);
+              let sampai = '';
+              if(jml > 1){
+                sampai = ' Sampai ' + (Number(item.id) + jml - 1);
+              }
+              console.log('jml', jml, 'sampai', sampai);
+
               let loopMock = '<div class="col-12 mb-2 item-loop"><div class="card shadow-sm"><div class="card-header text-center">';
-              loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text">';
-              loopMock += 'No. FD  : '+item.id+'<br>';
-              loopMock += 'Nama    : '+item.nama+'<br>';
-              loopMock += 'Judul    : '+item.judul+'<br>';
-              loopMock += 'Tujuan  : '+item.satker+'<br>';
-              loopMock += 'Durasi  : '+item.durasi+' hari<br>';
+              loopMock += '<b>Mock Struk</b></div><div class="card-body"><p class="card-text" jumlah-fd="'+item.jumlah+'">';
+              loopMock += 'No. FD  : <a class="text-decoration-none text-dark data-no-fd">'+item.id+'</a> '+sampai+'<br>';
+              loopMock += 'Nama    : <a class="text-decoration-none text-dark data-nama">'+item.nama+'</a> <br>';
+              loopMock += 'Judul    : <a class="text-decoration-none text-dark data-judul">'+item.judul+'</a> <br>';
+              loopMock += 'Tujuan  : <a class="text-decoration-none text-dark data-satker">'+item.satker+'</a> <br>';
+              loopMock += 'Durasi  : <a class="text-decoration-none text-dark data-durasi">'+item.durasi+'</a> hari<br>';
+              loopMock += 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+item.jumlah+'</a> <br>';
               loopMock += '</p><div class="d-flex justify-content-between align-items-center"><div class="btn-group">';
               // loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary">Hapus</button>';
               loopMock += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="printDiv(this);">Print</button></div></div></div></div></div>';
@@ -280,16 +321,61 @@
 
       // print antrian
       function printDiv(data){
-        var divToPrint= data.closest('.card-body').querySelector('.card-text');
+        let divToPrint= data.closest('.card-body').querySelector('.card-text');
+        let jumlahSize = divToPrint.getAttribute('jumlah-fd');
+        let id = $(divToPrint).find('.data-no-fd').text().trim();
+        let nama = $(divToPrint).find('.data-nama').text().trim();
+        let judul = $(divToPrint).find('.data-judul').text().trim();
+        let satker = $(divToPrint).find('.data-satker').text().trim();
+        let durasi = $(divToPrint).find('.data-durasi').text().trim();
+        let jumlah = $(divToPrint).find('.data-jumlah').text().trim();
+        console.log('id', id, 'nama', nama, 'judul', judul, 'satker', satker, 'durasi', durasi, 'jumlah', jumlah, 'jumlahSize', jumlahSize);
+
+        let content = '';
+        let count = 0;
+        for (let i = 0; i < jumlahSize; i++) {
+          let conData = 'No. FD  : <a class="text-decoration-none text-dark data-no-fd">'+( Number(id) + count) +'</a> <br>'
+          + 'Nama    : <a class="text-decoration-none text-dark data-nama">'+nama+'</a> <br>'
+          + 'Judul    : <a class="text-decoration-none text-dark data-judul">'+judul+'</a> <br>'
+          + 'Tujuan  : <a class="text-decoration-none text-dark data-satker">'+satker+'</a> <br>'
+          + 'Durasi  : <a class="text-decoration-none text-dark data-durasi">'+durasi+'</a> hari<br>'
+          + 'Jumlah FD  : <a class="text-decoration-none text-dark data-jumlah">'+jumlah+'</a> <br>';
+
+            content += '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 10 10px 0; width:49%; display:inline-block; box-sizing: border-box;"> <b>Mock Struk Admin</b> <hr>'+ conData + '</div>'
+          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 0 10px 0; width:49%; display:inline-block; box-sizing: border-box;"> <b>Mock Struk Klien</b> <hr>'+ conData +'</div>';
+
+          count += 1;
+        }
+
         var newWin=window.open('','Print-Window');
         newWin.document.open();
-        newWin.document.write('<html><body onload="window.print()">'  
-          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 10px 100px"> <b>Mock Struk Admin</b> <hr>'+ divToPrint.innerHTML + "</div>"
-          + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 0px 100px"> <b>Mock Struk Klien</b> <hr>'
-          + divToPrint.innerHTML+'</div></body></html>');
+        newWin.document.write('<html><body onload="window.print()">' + content + '</body></html>');
         newWin.document.close();
         setTimeout(function(){newWin.close();},10);
       }
+
+
+      // function printDiv(data){
+      //   var divToPrint= data.closest('.card-body').querySelector('.card-text');
+      //   var jumlah = divToPrint.getAttribute('jumlah-fd');
+      //   console.log('divToPrint', divToPrint, 'jumlah', jumlah);
+
+      //   let content = '';
+      //   for (let i = 0; i < jumlah; i++) {
+      //       content += '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 10px 100px"> <b>Mock Struk Admin</b> <hr>'+ divToPrint.innerHTML + '</div>'
+      //     + '<div style="border-style: solid; padding:20px 20px 20px 20px; margin:0px 100px 0px 100px"> <b>Mock Struk Klien</b> <hr>'+ divToPrint.innerHTML+'</div>';
+          
+      //     let contentHTML = $($.parseHTML(content)).find('fdLoop');
+
+      //     console.log('content', contentHTML);
+      //   }
+
+      //   var newWin=window.open('','Print-Window');
+      //   newWin.document.open();
+      //   newWin.document.write('<html><body onload="window.print()">' + content + '</body></html>');
+      //   newWin.document.close();
+      //   setTimeout(function(){newWin.close();},10);
+      // }
     </script>
   </body>
 </html>
